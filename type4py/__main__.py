@@ -1,9 +1,5 @@
 from type4py import data_loaders
-from type4py.to_onnx import type4py_to_onnx
-from type4py.reduce import reduce_tc
 from type4py.utils import setup_logs_file
-from libsa4py.cst_pipeline import Pipeline
-from libsa4py.utils import find_repos_list
 import argparse
 import warnings
 
@@ -37,7 +33,18 @@ data_loading_var = {'train': data_loaders.load_var_train_data, 'valid': data_loa
                      'test': data_loaders.load_var_test_data, 'labels': data_loaders.load_var_labels, 
                      'name': 'variable'}
 
+def to_onnx(args):
+    from type4py.to_onnx import type4py_to_onnx
+    type4py_to_onnx(args)
+
+def reduce_type_clusters(args):
+    from type4py.reduce import reduce_tc
+    reduce_tc(args)
+
 def extract(args):
+    from libsa4py.cst_pipeline import Pipeline
+    from libsa4py.utils import find_repos_list
+    
     p = Pipeline(args.c, args.o, True, False, args.d)
     p.run(find_repos_list(args.c) if args.l is None else find_repos_list(args.c)[:args.l], args.w)
     
@@ -166,13 +173,13 @@ def main():
     # To ONNX format
     onnx_parser = sub_parsers.add_parser('to_onnx')
     onnx_parser.add_argument("--o", required=True, type=str, help="Path to processed projects")
-    onnx_parser.set_defaults(func=type4py_to_onnx)
+    onnx_parser.set_defaults(func=to_onnx)
 
     # Reduce
     reduce_parser = sub_parsers.add_parser('reduce')
     reduce_parser.add_argument("--o", required=True, type=str, help="Path to processed projects")
     reduce_parser.add_argument("--d", default=256, type=int, help="A new dimension for type clusters [Default: 256]")
-    reduce_parser.set_defaults(func=reduce_tc)
+    reduce_parser.set_defaults(func=reduce_type_clusters)
 
     args = arg_parser.parse_args()
     args.func(args)
